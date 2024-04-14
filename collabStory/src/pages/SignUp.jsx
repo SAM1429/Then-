@@ -1,14 +1,19 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Button, Label, TextInput } from "flowbite-react";
+import { Alert, Button, Label, TextInput } from "flowbite-react";
 
 export default function SignUp() {
   const [formData, setFormData] = useState({});
+  const [errorMessage, setErrorMessage] = useState([]);
+  const [loading, setLoading] = useState(false);
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.id]: e.target.value });
-  }
-  const handleSubmit=async(e)=>{
+    setFormData({ ...formData, [e.target.id]: e.target.value.trim() });
+  };
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.username || !formData.email || !formData.password) {
+      return setErrorMessage(["All fields are required"]);
+    }
     try {
       const res = await fetch("api/auth/signup", {
         method: "POST",
@@ -18,10 +23,11 @@ export default function SignUp() {
         body: JSON.stringify(formData),
       });
       const data = await res.json();
-    } catch (error) {
-      
-    }
-  }
+      if(data.success){
+        return setErrorMessage(data.message);
+      }
+    } catch (error) {}
+  };
   return (
     <div className="min-h-screen mt-20 text-center">
       <Link
@@ -40,15 +46,30 @@ export default function SignUp() {
         <form className="w-full max-w-md" onSubmit={handleSubmit}>
           <div className="flex flex-col gap-4">
             <Label value="Your username" />
-            <TextInput type="text" placeholder="Username" id="username" onChange={handleChange}/>
+            <TextInput
+              type="text"
+              placeholder="Username"
+              id="username"
+              onChange={handleChange}
+            />
           </div>
           <div className="flex flex-col gap-4">
             <Label value="Your email" />
-            <TextInput type="email" placeholder="Email" id="email"  onChange={handleChange}/>
+            <TextInput
+              type="email"
+              placeholder="Email"
+              id="email"
+              onChange={handleChange}
+            />
           </div>
           <div className="flex flex-col gap-4">
             <Label value="Your password" />
-            <TextInput type="password" placeholder="Password" id="password"  onChange={handleChange}/>
+            <TextInput
+              type="password"
+              placeholder="Password"
+              id="password"
+              onChange={handleChange}
+            />
           </div>
           <br />
           <Button
@@ -61,11 +82,16 @@ export default function SignUp() {
         </form>
       </div>
       <div className="p-2">
-        <span >Already have an account?</span>
+        <span>Already have an account?</span>
         <Link to="/signin" className="text-indigo-400">
           Sign In
         </Link>
       </div>
+      {errorMessage && (
+        <Alert className="mt-5 " color="white">
+          {errorMessage}
+        </Alert>
+      )}
     </div>
   );
 }
